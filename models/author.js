@@ -8,16 +8,11 @@ const authorSchema = new mongoose.Schema({
   }
 })
 
-authorSchema.pre('remove', function(next) {
-  Book.find({ author: this.id }, (err, books) => {
-    if (err) {
-      next(err)
-    } else if (books.length > 0) {
-      next(new Error('This author has books still'))
-    } else {
-      next()
-    }
-  })
+authorSchema.pre('deleteOne', { document: true, query: false }, async function() {
+  const books = await Book.find({ author: this._id })
+  if (books.length > 0) {
+    throw new Error('Cannot delete author with existing books')
+  }
 })
 
 module.exports = mongoose.model('Author', authorSchema)

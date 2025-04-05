@@ -83,17 +83,19 @@ router.put('/:id', async (req, res) => {
 })
 
 router.delete('/:id', async (req, res) => {
-  let author
   try {
-    author = await Author.findById(req.params.id)
-    await author.remove()
+    const author = await Author.findById(req.params.id)
+    await author.deleteOne() // Changed from remove()
     res.redirect('/authors')
-  } catch {
-    if (author == null) {
-      res.redirect('/')
-    } else {
-      res.redirect(`/authors/${author.id}`)
-    }
+  } catch (err) {
+    const author = await Author.findById(req.params.id)
+    const books = await Book.find({ author: author.id })
+    
+    res.render('authors/show', {
+      author: author,
+      booksByAuthor: books,
+      errorMessage: err.message // Pass error to template
+    })
   }
 })
 
